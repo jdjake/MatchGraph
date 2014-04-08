@@ -43,14 +43,16 @@ class ColorGraph:
     # first check's if it can swap
     # then swaps and deletes accordingly
     # returns a list of nodes deleted
-    def swap_vertices(self, v1, v2):        
+    def swap_vertices(self, v1, v2):
+        ocolor1 = self.get_color(v1)
+        ocolor2 = self.get_color(v2)
         if not self._can_swap(v1, v2):
             return []
         else:
             self._swap_colors(v1,v2)
-            tup = self.delete_vertex(v1, self._get_random_color())
+            tup = self.delete_vertex(v1, ocolor1)
             if self.g.is_vertex(v2):
-                tup2 = self.delete_vertex(v2, self._get_random_color())
+                tup2 = self.delete_vertex(v2, ocolor2)
                 for n in self.g.neighbours(v2):
                     self.g.add_edge((v1, n))
                 self.g.remove_vertex(v2)
