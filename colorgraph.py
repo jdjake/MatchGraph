@@ -129,11 +129,19 @@ class ColorGraph:
         return self.g.neighbours(vertex)
 
     def partition_graph(self):
-	partition = []
+        """
+        Partitions graph into sets of nodes connected together which have
+        the same colour.
+
+        >>> c = ColorGraph({1: "RED", 2: "RED", 3: "RED", 4: "BLUE", 5: "BLUE", 6: "RED", 7: "RED"}, [(1,2), (2,3), (1,4), (3,5), (5,6), (4,7)])
+        >>> print(c.partition_graph())
+        """
+
+        partition = []
 
         vertex_stack = self.vertices()
         while vertex_stack:
-            current_partition = set(vertex_stack.pop())
+            current_partition = set([vertex_stack.pop()])
             partition_to_add = copy(current_partition)
             while current_partition:
                 v = current_partition.pop()
