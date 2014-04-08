@@ -1,6 +1,7 @@
 from graph import Graph
 import random
 
+
 class ColorGraph:
     def __init__(self, V = None, E = []):
         self.d_colors = V or {} 
@@ -14,6 +15,48 @@ class ColorGraph:
     def get_color(self, v):
         return self.d_colors[v]
 
+    def _get_random_color(self):
+        COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (76, 0, 153)]
+
+        random.seed()
+        return random.choice(COLORS)
+
+    def _swap_colors(self, v1, v2):
+        temp = self.get_color(v1)
+        self.d_colors[v1] = self.get_color(v2)
+        self.d_colors[v2] = temp
+
+    def _can_swap(self, v1, v2):
+        ocolor1 = self.get_color(v1)
+        ocolor2 = self.get_color(v2)
+
+        for n in self.g.neighbours(v1):
+            if ocolor2 == self.get_color(n):
+                return True
+
+        for n in self.g.neighbours(v2):
+            if ocolor1 == self.get_color(n):
+                return True
+
+        return False
+
+    # first check's if it can swap
+    # then swaps and deletes accordingly
+    # returns a list of nodes deleted
+    def swap_vertices(self, v1, v2):        
+        if not self._can_swap(v1, v2):
+            return []
+        else:
+            self._swap_colors(v1,v2)
+            tup = self.delete_vertex(v1, self._get_random_color())
+            if self.g.is_vertex(v2):
+                tup2 = self.delete_vertex(v2, self._get_random_color())
+                for n in self.g.neighbours(v2):
+                    self.g.add_edge((v1, n))
+                self.g.remove_vertex(v2)
+                return tup[1] + tup2[1] + [v2]
+            return tup[1]
+
     def delete_vertex(self, v, new_color):
         Q = [v] 
         # The Queue: needs v to prevent checking later
@@ -24,11 +67,11 @@ class ColorGraph:
         to_add = [] 
         # vertices that will be attatched to v
 
+        delete = []
+        # vertices to be deleted by main.py
+
         ocolor = self.get_color(v) 
         # node v's color (for comparison)
-
-        # the player's score
-        score = 1
 
         # adding neighbours to queue for checking 
         neigh = self.g.neighbours(v)
@@ -44,9 +87,9 @@ class ColorGraph:
             if self.get_color(current) == ocolor:
                 neigh = self.g.neighbours(current)
                 if current != v:
+                    delete.append(current)
                     self.g.remove_vertex(current)
                     self.d_colors.pop(current)
-                    score += 1
                 for n in neigh:
                     if self.get_color(n) == ocolor and n not in Q:
                         Q.append(n)
@@ -68,7 +111,7 @@ class ColorGraph:
         # finally, changes node v's color
         self.d_colors[v] = new_color
 
-        return score
+        return (v, delete)
 
     def delete_get_colors(self):
         return self.d_colors
