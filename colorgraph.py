@@ -30,6 +30,9 @@ class ColorGraph:
         ocolor1 = self.get_color(v1)
         ocolor2 = self.get_color(v2)
 
+        if v1 == v2:
+            return False
+
         for n in self.g.neighbours(v1):
             if ocolor2 == self.get_color(n):
                 return True
