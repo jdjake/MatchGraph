@@ -123,9 +123,6 @@ def remove_display_vertex(graph, vertex):
     vertex_sizes.pop(vertex)
     vertex_coordinates.pop(vertex)
 
-    # make sure the vertex is deleted on the graph end
-    graph.remove_vertex(vertex)
-
 
 
 
@@ -139,8 +136,8 @@ COLOURS = {"RED":(255, 0, 0), "GREEN":(0, 255, 0),
         "PURPLE":(76, 0, 153), "BLACK":(0, 0, 0),
         "WHITE":(255,255,255)}
 
-screen_width = 3840
-screen_height = 1080
+screen_width = 1200
+screen_height = 1000
 screen_center = Vector(screen_width//2, screen_height//2)
 
 screen = pygame.display.set_mode((screen_width, screen_height))
@@ -151,7 +148,7 @@ vertices = {1:"RED", 2:"RED", 3:"BLUE", 4:"GREEN", 5:"PURPLE", 6:"BLUE", 7:"PURP
 edges = [(1,2),(2,1),(3,4),(4,3),(4,2),(2,4),(3,5),(5,3),(1,6),(6,1), (7,8), (8,7), (7,9), (9,7), (6,9), (9,6)]
 
 #complete graph
-edges = [(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),
+"""edges = [(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),
         (2,1),(2,3),(2,4),(2,5),(2,6),(2,7),(2,8),(2,9),
         (3,1),(3,2),(3,4),(3,5),(3,6),(3,7),(3,8),(3,9),
         (4,1),(4,2),(4,3),(4,5),(4,6),(4,7),(4,8),(4,9),
@@ -159,7 +156,7 @@ edges = [(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),
         (6,1),(6,2),(6,3),(6,4),(6,5),(6,7),(6,8),(6,9),
         (7,1),(7,2),(7,3),(7,4),(7,5),(7,6),(7,8),(7,9),
         (8,1),(8,2),(8,3),(8,4),(8,5),(8,6),(8,7),(8,9),
-        (9,1),(9,2),(9,3),(9,4),(9,5),(9,6),(9,7),(9,8)]
+        (9,1),(9,2),(9,3),(9,4),(9,5),(9,6),(9,7),(9,8)]"""
 
 graph = ColorGraph(vertices, edges)
 
@@ -167,7 +164,7 @@ graph = ColorGraph(vertices, edges)
 vertex_coordinates = {}
 
 # Pixel radius of vertex
-vertex_sizes = defaultdict(lambda: randint(50,70))
+vertex_sizes = defaultdict(lambda: randint(50,90))
 
 first_mouse_clicked = True
 first_selected = None
@@ -203,6 +200,11 @@ while True:
                     first_mouse_clicked = True
 
                     vertex_coordinates[first_selected], vertex_coordinates[x] = vertex_coordinates[x], vertex_coordinates[first_selected]
+
+                    to_delete = graph.swap_vertices(first_selected, x)
+
+                    for deletion in to_delete:
+                         remove_display_vertex(graph, deletion)
 
                     print("Swapping Vertex {} with Vertex {}".format(first_selected, x))
                     first_selected = None
