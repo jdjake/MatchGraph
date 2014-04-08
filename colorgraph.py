@@ -16,7 +16,7 @@ class ColorGraph:
         return self.d_colors[v]
 
     def _get_random_color(self):
-        COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (76, 0, 153)]
+        COLORS = ["RED", "GREEN", "BLUE", "PURPLE"]
 
         random.seed()
         return random.choice(COLORS)
