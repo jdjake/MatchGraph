@@ -32,14 +32,15 @@ class ColorGraph:
 
         if v1 == v2:
             return False
+        
+        if self.g.is_edge((v1, v2)):
+            for n in self.g.neighbours(v1):
+                if ocolor2 == self.get_color(n):
+                    return True
 
-        for n in self.g.neighbours(v1):
-            if ocolor2 == self.get_color(n):
-                return True
-
-        for n in self.g.neighbours(v2):
-            if ocolor1 == self.get_color(n):
-                return True
+            for n in self.g.neighbours(v2):
+                if ocolor1 == self.get_color(n):
+                    return True
 
         return False
 
