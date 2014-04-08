@@ -135,11 +135,13 @@ class ColorGraph:
 
         >>> c = ColorGraph({1: "RED", 2: "RED", 3: "RED", 4: "BLUE", 5: "BLUE", 6: "RED", 7: "RED"}, [(1,2), (2,3), (1,4), (3,5), (5,6), (4,7)])
         >>> print(c.partition_graph())
+        [{1, 2, 3}, {4}, {5}, {6}, {7}]
         """
 
         partition = []
 
         vertex_stack = self.vertices()
+
         while vertex_stack:
             current_partition = set([vertex_stack.pop()])
             partition_to_add = copy(current_partition)
