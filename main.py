@@ -164,7 +164,7 @@ graph = ColorGraph(vertices, edges)
 vertex_coordinates = {}
 
 # Pixel radius of vertex
-vertex_sizes = defaultdict(lambda: randint(50,90))
+vertex_sizes = defaultdict(lambda: randint(100,150))
 
 first_mouse_clicked = True
 first_selected = None
@@ -199,15 +199,16 @@ while True:
                     # Do stuff to swap vertices
                     first_mouse_clicked = True
 
-                    vertex_coordinates[first_selected], vertex_coordinates[x] = vertex_coordinates[x], vertex_coordinates[first_selected]
-
                     to_delete = graph.swap_vertices(first_selected, x)
 
-                    for deletion in to_delete:
-                         remove_display_vertex(graph, deletion)
+                    if to_delete:                        
+                        vertex_coordinates[first_selected], vertex_coordinates[x] = vertex_coordinates[x], vertex_coordinates[first_selected]
 
-                    print("Swapping Vertex {} with Vertex {}".format(first_selected, x))
-                    first_selected = None
+                        for deletion in to_delete:
+                            remove_display_vertex(graph, deletion)
+
+                        print("Swapping Vertex {} with Vertex {}".format(first_selected, x))
+                        first_selected = None
 
                 update_screen_image(graph)
                 label = myfont.render("Score: {}".format(score), 1, (255, 255, 0))
