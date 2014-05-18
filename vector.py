@@ -1,24 +1,37 @@
-import math
+from math import sqrt
 
 class Vector():
+    """
+    Class for implementing vectors with some basic vector operations like
+    adding subtracting, the dot product, scalar multiplication and the like.
+    """
+
     def __init__(self, *components):
+        """
+        Given a list of n components, forms a n dimensional vector.
+        """
+
         self.components = components
+        self.dimension = len(components)
 
     def __str__(self):
         """
+        Prints the elements of the vector in a list form
+
         >>> a = Vector(3,4,5)
         >>> print(a)
-        (3, 4, 5)
+        Vector(3, 4, 5)
         >>> a = Vector()
         >>> print(a)
-        ()
+        Vector()
         """
 
-        return str(self.components)
+        return "Vector{}".format(str(self.components))
 
-    # Defines getting components of a vector
     def __getitem__(self, index):
         """
+        Indexes a component in the Vector.
+
         >>> a = Vector(3,4,5)
         >>> a[2]
         5
@@ -30,6 +43,8 @@ class Vector():
 
     def __len__(self):
         """
+        Calculates the length of a vector (its dimension).
+
         >>> a = Vector(3,4)
         >>> len(a)
         2
@@ -38,10 +53,12 @@ class Vector():
         0
         """
 
-        return len(self.components)
+        return self.dimension
 
     def __iter__(self):
         """
+        Iterates through the components of a vector.
+
         >>> a = Vector(1,2,3)
         >>> print([i for i in a])
         [1, 2, 3]
@@ -54,45 +71,55 @@ class Vector():
 
     def __add__(self, other):
         """
+        Sums the components of two vectors together.
+
         >>> a = Vector(1,2,3)
         >>> b = Vector(4,5,6)
         >>> print(a + b)
-        (5, 7, 9)
+        Vector(5, 7, 9)
         >>> c = Vector()
         >>> print(c + c)
-        ()
+        Vector()
         """
 
-        if not isinstance(other, Vector):
-            raise ValueError("cannot subtract object of type {} from Vector".format(type(other)))
+        if isinstance(other, Vector):
+            # Addition is undefined for vectors of differing dimension.
+            if self.dimension != other.dimension:
+                raise ValueError("""Addition Undefined for Vectors
+                                    of Different Dimension""")
 
-        if len(self) != len(other):
-            raise ValueError("Operation Undefined for Vectors of Different Dimension")
+            return Vector(*(x + y for x,y in zip(self, other)))
 
-        return Vector(*(x + y for x,y in zip(self, other)))
+        raise ValueError("""cannot add object of
+                            type {} from Vector""".format(type(other)))
 
-    # Defines Vector Subtraction
     def __sub__(self, other):
         """
+        Subtracts the components of each vector with each other.
+
         >>> a = Vector(1,2,3)
         >>> print(a - a)
-        (0, 0, 0)
+        Vector(0, 0, 0)
         >>> b = Vector(4,5,6)
         >>> print(b - a)
-        (3, 3, 3)
+        Vector(3, 3, 3)
         """
 
-        if not isinstance(other, Vector):
-            raise ValueError("cannot subtract object of type {} from Vector".format(type(other)))
+        if isinstance(other, Vector):
+            if self.dimension != other.dimension:
+                raise ValueError("""Subtraction Undefined for Vectors
+                                    of Different Dimension""")
 
-        if len(self) != len(other):
-            raise ValueError("Operation Undefined for Vectors of Different Dimension")
+            return Vector(*(x - y for x,y in zip(self, other)))
 
-        return Vector(*(x - y for x,y in zip(self, other)))
+        raise ValueError("""cannot subtract object of type
+                            {} from Vector""".format(type(other)))
 
-    # Defines a vector dot product operation
     def __mul__(self, other):
         """
+        We define multiplication of a vector with a scalar as the multiple of
+        its components, and multiplication of two vectors by the dot product.
+
         >>> a = Vector(1,2,3)
         >>> b = Vector(4,5,6)
         >>> c = Vector(0,0,0)
@@ -101,39 +128,76 @@ class Vector():
         >>> b*c
         0
         >>> print(a*2)
-        (2, 4, 6)
+        Vector(2, 4, 6)
         """
 
+        # Multiplication by a scalar is standard vector scalar multiplication.
         if isinstance(other, int) or isinstance(other, float):
-            return Vector(*(int(x*other) for x in self))
+            return Vector(*(x*other for x in self))
 
-        if len(self) != len(other):
-            raise ValueError("Operation Undefined for Vectors of Different Dimension")
+        # Multiplication by a vector is the calculation of the dot product.
+        if isinstance(other, Vector):
+            if self.dimension != other.dimension:
+                raise ValueError("""Dot-Product is Undefined for Vectors
+                                    of Differing Dimension""")
 
-        return sum(int(x*y) for x,y in zip(self, other))
+            return sum(x*y for x,y in zip(self, other))
+
+        raise ValueError("""Cannot multiply a vector
+                            by a {}""".format(type(other)))
+
+    def __rmul__(self, other):
+        """
+        Implements multiplication from the right, which is exactly the same as
+        multiplication from the left as the operations defined are symmetric.
+        """
+
+        return self*other
 
     def __truediv__(self, other):
         """
+        Divides a Vector by a scalar quantity.
+
         >>> a = Vector(1,2,3)
         >>> print(a/3)
-        (0.3333333333333333, 0.6666666666666666, 1.0)
+        Vector(0.3333333333333333, 0.6666666666666666, 1.0)
         """
 
-        if not (isinstance(other, int) or isinstance(other, float)):
-            raise ValueError("Can only divide a Vector by a number, not a {}".format(type(other)))
+        if isinstance(other, int) or isinstance(other, float):
+            return Vector(*(x/other for x in self))
 
-        # We make it an int for discrete pixels
-        return Vector(*(int(x/other) for x in self))
+        raise ValueError("""Can only divide a Vector by
+                            a number, not a {}""".format(type(other)))
 
-    # Defines the euclidean norm (lenght) of a vector
     def norm(self):
         """
+        Defines the Euclidean Norm of a vector - in other words, its length.
+
         >>> a = Vector(1,0,0)
         >>> a.norm()
         1.0
         """
 
-        return math.sqrt(self*self)
+        return sqrt(self*self)
 
-    def angle(self, other):
-        return (self*other)/(self.norm()*other.norm())
+    def in_range(self, self_radius, other, other_radius):
+        """
+        Given two vectors, which we can see as circles/spheres/hyperspheres
+        if given a radius, this function tests whether the two vectors with
+        these radii overlap given a position and size.
+
+        >>> a = Vector(0, 0)
+        >>> a.in_range(5, a, 5)
+        True
+        >>> b = Vector(10,0)
+        >>> a.in_range(10, b, 10)
+        True
+        >>> a.in_range(9, b, 9)
+        True
+        """
+
+        if isinstance(other, Vector):
+            return (self - other).norm() < self_radius + other_radius
+
+        raise ValueError("""Cannot define in_range
+                            on type {}""".format(type(other)))
