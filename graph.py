@@ -1,295 +1,216 @@
 """
-Graph module for directed graph.
+graph.py
 
-Includes the functions implemented in the Jan 21/22
-lectures with one key difference.
+Implemented in lectures in CMPUT274 taught by Michael Bowman, Walter Bischov,
+Leah Hackman & Zack friggstadt. Updated by Parash Rahman & Jacob Denson.
 
-The way the nodes and edges are stored has already
-been converted to the "adjacency list" representation
-we will discuss next lecture.
-
-More specifically, _alist is a dictionary that maps
-a node u to the list of neighbours of u. You can call
-the methods of the graph in exactly the same way as before,
-these changes simply improve the running time.
-
-All running time statements are under the assumption that it takes
-O(1) time to index a dictionary.
-
-We will add more to this file in the next lecture, but this
-is enough to do the next exercise.
+Implements a graph class with standard features you would expect in a graph,
+like searching, pathfinding and finding the tangent line at a specific point ;)
 """
 
 class Graph:
-
-    def __init__(self, V=set(), E=[]):
+    def __init__(self, vertices = [], edges = [], is_directed = True):
         """
-        Create a graph with a given set of
-        vertices and list of edges.
-        For the purpose of this class
-        We want E to be a list of tuples.
+        Given a list of vertices and edges (a list of tuples of vertex pairs),
+        this function creates a graph with a given set of vertices and edges.
+        If no vertices and edges are specified, an empty graph is created. One
+        can also specify whether the graph is directed or not, which by default
+        is directed.
 
-        If no arguements are passed in,
-        the graph is an empty graph with
-        no vertices and edges.
-
-        Running time: O(len(V) + len(E))
-
-        >>> g = Graph()
-        >>> g._alist == {}
+        >>> a = Graph()
+        >>> a.adjacency_dict == {}
         True
-        >>> g = Graph({1,2,3}, {(1,2), (2,3)})
-        >>> g._alist.keys() == set({1,2,3})
+        >>> b = Graph({1,2,3}, {(1,2), (2,3)}, True)
+        >>> b.adjacency_dict
+        {1: {2}, 2: {3}, 3: set()}
+        """
+
+        self.is_directed = is_directed
+
+        self.adjacency_dict = {}
+
+        for vertex in vertices:
+            self.add_vertex(vertex)
+
+        for vertex_from, vertex_to in edges:
+            self.add_edge(vertex_from, vertex_to)
+
+    def is_vertex(self, vertex):
+        """
+        Returns true if the given vertex is in the graph.
+
+        >>> a = Graph({1,2})
+        >>> a.is_vertex(1)
         True
-        >>> g._alist[1]
-        [2]
-        >>> g._alist[3]
-        []
-        """
-
-        # _alist is a dictionary that maps vertices to a list of vertices
-        # i.e. _alist[v] is the list of neighbours of v
-        # This also means _alist.keys() is the set of nodes in the graph
-        self._alist = {}
-        
-        for v in V:
-            self.add_vertex(v)
-
-        for e in E:
-            self.add_edge(e)
-        
-    def add_vertex(self, v):
-        """
-        Adds a vertex to our graph.
-
-        Running time: O(1)
-        
-        >>> g = Graph()
-        >>> g.add_vertex(1)
-        >>> 1 in g._alist.keys()
-        True
-        >>> g.add_vertex(1)
-        >>> len(g._alist) == 1
-        True
-        """
-        if v not in self._alist.keys():
-            self._alist[v] = []
-
-    def add_edge(self, e):
-        """
-        Adds an edge to our graph.
-        Do not add edge if the vertices
-        for it do not exist. 
-        Can not add more than one copy of an edge.
-
-        Running time: O(1)
-
-        >>> g = Graph({1,2})
-        >>> 2 in g._alist[1]
+        >>> a.is_vertex(3)
         False
-        >>> g.add_edge((1,2))
-        >>> 2 in g._alist[1]
+        """
+
+        return vertex in self.adjacency_dict.keys()
+
+    def is_edge(self, vertex_from, vertex_to):
+        """
+        Returns true if the specified edge is in the graph.
+
+        >>> a = Graph({1,2}, [(1,2)])
+        >>> a.is_edge(1,2)
         True
-        >>> g.add_edge((1,2))
-        >>> len(g._alist[1]) == 2
-        True
+        >>> a.is_edge(2,1)
+        False
+        >>> a.is_edge(3,1)
+        False
         """
 
-        condition1 = e[0] in self._alist.keys()
-        condition2 = e[1] in self._alist.keys()
-        condition3 = e[1] != e[0]
+        # If the first vertex isn't even in the graph, the edge itself can't be.
+        if not self.is_vertex(vertex_from):
+            return False
 
-        if condition1 and condition2 and condition3:
-            if e[1] not in self._alist[e[0]]:
-                self._alist[e[0]].append(e[1])
-                self._alist[e[1]].append(e[0])
- 
-
-    def remove_vertex(self, v):
-        for vert in self._alist[v]:
-            self._alist[vert].remove(v)
-        self._alist.pop(v)
-
-    def neighbours(self,v):
-        """
-        Given a vertex v, return a copy of the list
-        of neighbours of v in the graph.
-        
-        >>> g = Graph()
-        >>> g.neighbours(1)
-        []
-        >>> g = Graph({1,2,3}, [(1,2), (1,3)])
-        >>> g.neighbours(1)
-        [2, 3]
-
-        Running time: O(len(self._alist[v]))
-        (linear in the number of neighbours of v)
-        """
-
-        if v not in self._alist.keys():
-            return []
-        else:
-            return list(self._alist[v]) 
+        return vertex_to in self.adjacency_dict[vertex_from]
 
     def vertices(self):
         """
         Returns a copy of the set of vertices in the graph.
 
-        Running time: O(# vertices)
-
-        >>> g = Graph({1,2,3}, [(1,2), (2,3)])
-        >>> g.vertices() == {1,2,3}
+        >>> a = Graph({1,2,3}, [(1,2), (2,3)])
+        >>> a.vertices() == {1,2,3}
         True
         """
 
-        return set(self._alist.keys())
+        return set(self.adjacency_dict.keys())
 
     def edges(self):
         """
-        Create and return a list of the edges in the graph.
+        Returns a list of edges in the graph.
 
-        Running time: O(# nodes + # edges)
-
-        >>> g = Graph({1,2,3}, [(1,2), (2,3)])
-        >>> g.edges()
+        >>> a = Graph({1,2,3}, [(1,2), (2,3)])
+        >>> a.edges()
         [(1, 2), (2, 3)]
+
+        >>> b = Graph()
+        >>> b.edges()
+        []
         """
-        
-        edges = []
-        for v,adj in self._alist.items():
-            for u in adj:
-                edges.append((v,u))
-    
+
+        edges = [(vertex_from, vertex_to)
+            for vertex_from in self.adjacency_dict.keys()
+            for vertex_to in self.adjacency_dict[vertex_from]]
+
         return edges
 
-    def is_vertex(self, v):
-        """
-        Returns true if and only if v is a vertex in the graph.
-        This is more efficient then checking v in g.vertices().
+    def add_vertex(self, vertex):
+        """rom].add(v
+        Adds a vertex to the graph.
 
-        Running time: O(1)
-
-        >>> g = Graph({1,2})
-        >>> g.is_vertex(1)
-        True
-        >>> g.is_vertex(3)
-        False
-        """
-
-        return v in self._alist.keys()
-
-    def is_edge(self, e):
-        """
-        Returns true if and only if e is an edge in the graph.
-        
-        Running time: O(len(self._alist[e[0]]))
-        linear in the number neighbours of e[0]
-
-        >>> g = Graph({1,2}, [(1,2)])
-        >>> g.is_edge((1,2))
-        True
-        >>> g.is_edge((2,1))
-        False
-        >>> g.is_edge((3,1))
-        False
+        >>> a = Graph()
+        >>> a.add_vertex(1)
+        >>> a.vertices()
+        {1}
+        >>> a.add_vertex(2)
+        >>> a.vertices()
+        {1, 2}
         """
 
-        if not self.is_vertex(e[0]):
-            return False
-        return e[1] in self._alist[e[0]]
+        # Adding a vertex twice to the graph may have been made in error
+        # made in error, we specifically let the user know.
+        if self.is_vertex(vertex):
+            raise ValueError("Vertex {} is already in graph".format(vertex))
 
-def is_walk(g, walk):
-    """
-    g is a graph and w is a list of nodes.
-    Returns true if and only if w is a walk in g.
+        self.adjacency_dict[vertex] = set()
 
-    Running time - O(d * m) where:
-      - k = len(walk)
-      - d = maximum size of a neighbourhood of a node
-    In particular, if the graph has no repeated edges, then d <= # nodes.
-    
-    >>> g = Graph({1,2,3,4}, [(1,2), (2,3), (2,4), (4,3), (3,1)])
-    >>> is_walk(g, [1,2,3,1,2,4])
-    True
-    >>> is_walk(g, [1,2,3,2])
-    False
-    >>> is_walk(g, [])
-    False
-    >>> is_walk(g, [1])
-    True
-    >>> is_walk(g, [5])
-    False
-    """
-    
-    for v in walk: # O(k)
-        if not g.is_vertex(v): # O(1)
-            return False
+    def add_edge(self, vertex_from, vertex_to):
+        """
+        Given a tuple of 2 vertices, adds an edge between them. If the graph is
+        undirected, both directions of edge are added. If the graph is directed,
+        an edge from the first to the second is added. Two edges cannot exist
+        between the same two nodes.
 
-    if len(walk) == 0:
-        return False
+        >>> a = Graph({1,2})
+        >>> a.adjacency_dict
+        {1: set(), 2: set()}
+        >>> a.add_edge(1,2)
+        >>> a.adjacency_dict
+        {1: {2}, 2: set()}
 
-    # Note, can reduce the running time of the entire function
-    # to O(k) if we implement the method is_edge to run in O(1) time.
-    # This is a good exercise to think about.
-    for node in range(0,len(walk)-1): # O(k)
-        if not g.is_edge((walk[node], walk[node+1])): # O(d)
-            return False
-        
-    return True
+        >>> b = Graph({1,2}, is_directed = False)
+        >>> b.add_edge(1,2)
+        >>> b.adjacency_dict
+        {1: {2}, 2: {1}}
+        """
 
-def is_path(g, path):
-    """
-    Returns true if and only if path is a path in g
+        if not self.is_vertex(vertex_from):
+            raise ValueError("Vertex {} is not in graph".format(vertex_1))
 
-    Running time: O(k*d)
-    Specifically, is O(k) + running time of is_walk.
+        if not self.is_vertex(vertex_to):
+            raise ValueError("Vertex {} is not in graph".format(vertex_2))
 
-    >>> g = Graph({1,2,3,4}, [(1,2), (2,3), (2,4), (4,3), (3,1)])
-    >>> is_path(g, [1,2,3,1,2,4])
-    False
-    >>> is_path(g, [1,2,3])
-    True
-    """
+        if self.is_edge(vertex_from, vertex_to):
+            raise ValueError("Edge {} already in graph".format(edge))
 
-    return is_walk(g, path) and len(path) == len(set(path))
+        if self.is_directed:
+            self.adjacency_dict[vertex_from].add(vertex_to)
 
-def search(g, v):
-    """
-    Find all nodes that can be reached from v in the graph g.
+        else:
+            self.adjacency_dict[vertex_from].add(vertex_to)
+            self.adjacency_dict[vertex_to].add(vertex_from)
 
-    Returns a dictionary 'reached' such that reached.keys()
-    are all nodes that can be reached from v and reached[u]
-    is the predecessor of u in the search.
+    def remove_vertex(self, vertex):
+        """
+        Removes a vertex from the graph, also removing all edges connected
+        to the edge and from the edge in the graph.
 
-    Running time: O(# nodes + # edges)
-    More specifically, O(# edges (u,w) with u reachable from v)
+        >>> a = Graph([1,2,3], [(1,2), (2,3),(3,1)], False)
+        >>> a.remove_vertex(1)
+        >>> a.adjacency_dict
+        {2: {3}, 3: {2}}
+        """
 
-    >>> g = Graph({1,2,3,4,5,6}, [(1,2), (1,3), (2,5), (3,2), (4,3), (4,5), (4,6), (5,2), (5,6)])
-    >>> reached = search(g, 1)
-    >>> reached.keys() == {1,2,3,5,6}
-    True
-    >>> g.is_edge((reached[6], 6))
-    True
-    """
+        for other_vertex in self.adjacency_dict[vertex]:
+            self.adjacency_dict[other_vertex].discard(vertex)
 
-    reached = {}
-    stack = [(v,v)]
-    # brief running time analysis:
-    # each edge (u,v) will be added and removed from the stack at most once
-    while stack:
-        u,w = stack.pop()
+        self.adjacency_dict.pop(vertex)
 
-        # the block under the if statement will be run at
-        # most once per node u and the
-        # inner loop takes time O(# neighbours of u)
-        # the sum of (# neighbours of u) over all u is just # edges.
-        if u not in reached.keys():
-            reached[u] = w
+    def remove_edge(self, vertex_from, vertex_to):
+        """
+        Removes an edge from the graph
 
-            for x in g.neighbours(u):
-                stack.append((x,u))
+        >>> a = Graph([1,2], [(1,2),(2,1)])
+        >>> a.remove_edge(1,2)
+        >>> a.edges()
+        [(2, 1)]
 
-    # so, even though there are nested loops the running
-    # time will still be linear
+        >>> b = Graph([1,2], [(1,2)])
+        >>> b.remove_edge(1,2)
+        >>> b.edges()
+        []
+        """
 
-    return reached
+        if not self.is_vertex(vertex_from):
+            raise ValueError("Vertex {} is not in the graph".format(vertex_from))
+
+        if not self.is_vertex(vertex_to):
+            raise ValueError("Vertex {} is not in the graph".format(vertex_to))
+
+        if not self.is_edge(vertex_from, vertex_to):
+            raise ValueError("""Edge from {} to {} does
+                                not exist""".format(vertex_from, vertex_to))
+
+        if self.is_directed:
+            self.adjacency_dict[vertex_from].remove(vertex_to)
+
+        else:
+            self.adjacency_dict[vertex_from].remove(vertex_to)
+            self.adjacency_dict[vertex_to].remove(vertex_from)
+
+    def neighbours(self, vertex):
+        """
+        Given a vertex, returns a list of vertices reachable from that vertex.
+
+        >>> g = Graph({1,2,3}, [(1,2), (1,3)])
+        >>> g.neighbours(1)
+        [2, 3]
+        """
+
+        if vertex not in self.adjacency_dict.keys():
+            raise ValueError("Vertex {} is not in graph".format(vertex))
+
+        return list(self.adjacency_dict[vertex]) 

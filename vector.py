@@ -2,13 +2,13 @@ from math import sqrt
 
 class Vector():
     """
-    Class for implementing vectors with some basic vector operations like
-    adding subtracting, the dot product, scalar multiplication and the like.
+    Class implementing a standard vector with some basic vector operations like
+    adding, subtracting, the dot product, scalar multiplication, and the like.
     """
 
     def __init__(self, *components):
         """
-        Given a list of n components, forms a n dimensional vector.
+        Given a list of n components, __init__ creates an n dimensional vector.
         """
 
         self.components = components
@@ -16,7 +16,7 @@ class Vector():
 
     def __str__(self):
         """
-        Prints the elements of the vector in a list form
+        Prints the elements of the vector in tuple like fashion.
 
         >>> a = Vector(3,4,5)
         >>> print(a)
@@ -95,7 +95,7 @@ class Vector():
 
     def __sub__(self, other):
         """
-        Subtracts the components of each vector with each other.
+        Subtracts the components of one vector from another.
 
         >>> a = Vector(1,2,3)
         >>> print(a - a)
@@ -117,8 +117,8 @@ class Vector():
 
     def __mul__(self, other):
         """
-        We define multiplication of a vector with a scalar as the multiple of
-        its components, and multiplication of two vectors by the dot product.
+        Multiplies a vector, either with a scalar as a multiple of its
+        components, or with two vectors as the dot product.
 
         >>> a = Vector(1,2,3)
         >>> b = Vector(4,5,6)
@@ -131,11 +131,9 @@ class Vector():
         Vector(2, 4, 6)
         """
 
-        # Multiplication by a scalar is standard vector scalar multiplication.
         if isinstance(other, int) or isinstance(other, float):
             return Vector(*(x*other for x in self))
 
-        # Multiplication by a vector is the calculation of the dot product.
         if isinstance(other, Vector):
             if self.dimension != other.dimension:
                 raise ValueError("""Dot-Product is Undefined for Vectors
@@ -148,8 +146,8 @@ class Vector():
 
     def __rmul__(self, other):
         """
-        Implements multiplication from the right, which is exactly the same as
-        multiplication from the left as the operations defined are symmetric.
+        Implements multiplication of vectors from the right, which is the same
+        as multiplication from the left as the operations are symmetric.
         """
 
         return self*other
@@ -176,13 +174,16 @@ class Vector():
         >>> a = Vector(1,0,0)
         >>> a.norm()
         1.0
+        >>> b = Vector(0,0,0)
+        >>> b.norm()
+        0.0
         """
 
         return sqrt(self*self)
 
     def in_range(self, self_radius, other, other_radius):
         """
-        Given two vectors, which we can see as circles/spheres/hyperspheres
+        Given two vectors, which we can see as circles/spheres/hypermegaspheres
         if given a radius, this function tests whether the two vectors with
         these radii overlap given a position and size.
 
