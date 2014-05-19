@@ -1,6 +1,8 @@
-from graph import Graph
 import random
+
+from graph import Graph
 from copy import copy
+from itertools import product
 
 class ColorGraph():
     """
@@ -24,6 +26,7 @@ class ColorGraph():
 
         vertices = [vertex for vertex, color in vertex_colors]
         self.graph = Graph(vertices, edges)
+        self.score = 0
 
     def add_vertex(self, vertex, color):
         """
@@ -57,6 +60,12 @@ class ColorGraph():
 
         return self.vertex_colors[vertex]
 
+    def get_score(self):
+        return self.score
+
+    def change_score(self, change):
+        self.score += change
+
     def get_random_color(self):
         """
         Chooses a random color for a vertex from a specific selection.
@@ -82,6 +91,32 @@ class ColorGraph():
         self.vertex_colors[vertex_1], self.vertex_colors[vertex_2]      \
           = self.get_color(vertex_2), self.get_color(vertex_1)
 
+    def find_partition(self, start_node):
+        """
+        Given a node, this function finds all other nodes connected in a
+        component like fashion with the same color.
+        """
+
+        current_partition = set([start_node])
+        total_partition = copy(current_partition)
+
+        partition_color = self.get_color(start_node)
+
+        # Now we do a depth first search on the vertices, adding vertices
+        # to our partition that share a common edge and are the same color.
+        while current_partition:
+            vertex = current_partition.pop()
+
+            same_color = lambda x: self.get_color(x) == partition_color
+            maybe_neighbors = filter(same_color, self.graph.neighbours(vertex))
+
+            for neighbor in maybe_neighbors:
+                if neighbor not in total_partition:
+                    current_partition.add(neighbor)
+                    total_partition.add(neighbor)
+
+        return total_partition
+
     def partition_graph(self):
         """
         Partitions graph into sets of nodes connected together which have
@@ -102,29 +137,12 @@ class ColorGraph():
         # We work through vertices one by one, forming partitions as we go.
         while unvisited_vertices:
             new_partition_start = unvisited_vertices.pop()
+            new_partition = self.find_partition(new_partition_start)
 
-            # We begin by popping an arbitrary vertex to start a new component.
-            current_partition = set([new_partition_start])
-            partition_to_add = copy(current_partition)
-
-            partition_color = self.get_color(new_partition_start)
-
-            # Now we do a depth first search on the vertices, adding vertices
-            # to our partition that share a common edge and are the same color.
-            while current_partition:
-                vertex = current_partition.pop()
-
-                # If we've scanned a vertex, we no longer need to look at it to
-                # find more partitions (it's already in the one we're forming)
+            for vertex in new_partition:
                 unvisited_vertices.discard(vertex)
 
-                for neighbour in self.graph.neighbours(vertex):
-                    if (self.get_color(neighbour) == partition_color
-                      and neighbour not in partition_to_add):
-                        current_partition.add(neighbour)
-                        partition_to_add.add(neighbour)
-
-            partition.append(partition_to_add)
+            partition.append(new_partition)
 
         return partition
 
@@ -170,6 +188,33 @@ class ColorGraph():
         self.vertex_colors.pop(vertex)
         self.graph.remove_vertex(vertex)
 
+    def remove_partitions(self, partitions):
+        """
+        Removes all partitions specified, adding edges between all the
+        nodes originally connected to the partition. Returns a list of all
+        nodes deleted.
+        """
+
+        deleted = []
+
+        for partition in partitions:
+            self.change_score(len(partition))
+
+            neighbors = [y for x in partition for y in self.graph.neighbour(x)]
+            new_neighbors = [x for x in neighbors if x not in partition]
+
+            possible_connect = [x for x in product(new_neighbors,new_neighbors)]
+            to_connect = [(x,y) for x,y in possible_connect if x != y]
+
+            for vertex_1, vertex_2 in to_connect:
+                self.graph.add_edge(vertex_1, vertex_2)
+
+            for element in partition:
+                self.remove_vertex(element)
+                deleted.append(element)
+
+        return deleted
+
     def swap_vertices(self, vertex_1, vertex_2):
         """
         Checks if two vertices can be swapped, and if they can, swaps the two
@@ -177,37 +222,22 @@ class ColorGraph():
         The function determines a list of vertices deleted and the score scored.
         """
 
-        score = 0
         deleted = []
 
-        if self.can_swap(vertex_1, vertex_2):
-            self.swap_colors(vertex_1, vertex_2)
-            deletable = [x for x in self.partition_graph() if len(x) > 2]
+        if not self.can_swap(vertex_1, vertex_2):
+            return deleted
 
-            while deleteable:
-                # For each partition, we delete all edges in the partition, then
-                # connect together all edges that were connected to the partition
-                for partition in deletable:
-                    score += len(partition)
+        self.swap_colors(vertex_1, vertex_2)
+        deletable = [x for x in self.partition_graph() if len(x) > 2]
 
-                    neighbours = [neighbour for x in partition
-                      for neighbour in self.graph.neighbours(x)
-                      if neighbour not in partition]
+        while deleteable:
+            deleted += self.remove_partitions(deleteable)
 
-                    for vertex_from in neighbours:
-                        to_add_edge = [x for x in neighbours if x != vertex_from]
-                        for neighbour_to in to_add_edge:
-                            self.graph.add_edge(vertex_from, vertex_to)
+            # We now see if we've caused a chain reaction, in which case
+            # we start the deletion process all over again.
+            deleteable = [x for x in self.partition_graph() if len(x) > 2]
 
-                    for element in partition:
-                        self.remove_vertex(element)
-                        deleted.append(element)
-
-                # We see if there is now a chain reaction occuring, in which
-                # case we start the deletion process all over again.
-                deleteable = [x for x in self.partition_graph() if len(x) > 2]
-
-        return score**2, deleted
+        return deleted
 
     def get_two_partitions(self):
         """

@@ -3,12 +3,14 @@ graph.py
 
 Implemented in lectures in CMPUT274 taught by Michael Bowman, Walter Bischov,
 Leah Hackman & Zack friggstadt. Updated by Parash Rahman & Jacob Denson.
-
-Implements a graph class with standard features you would expect in a graph,
-like searching, pathfinding and finding the tangent line at a specific point ;)
 """
 
 class Graph:
+    """
+    Implements a graph class with standard features expected in a graph, like
+    searching, pathfinding, and finding the tangent line at a specific point ;)
+    """
+
     def __init__(self, vertices = [], edges = [], is_directed = True):
         """
         Given a list of vertices and edges (a list of tuples of vertex pairs),
@@ -20,7 +22,7 @@ class Graph:
         >>> a = Graph()
         >>> a.adjacency_dict == {}
         True
-        >>> b = Graph({1,2,3}, {(1,2), (2,3)}, True)
+        >>> b = Graph([1,2,3], [(1,2), (2,3)], True)
         >>> b.adjacency_dict
         {1: {2}, 2: {3}, 3: set()}
         """
@@ -39,7 +41,7 @@ class Graph:
         """
         Returns true if the given vertex is in the graph.
 
-        >>> a = Graph({1,2})
+        >>> a = Graph([1,2])
         >>> a.is_vertex(1)
         True
         >>> a.is_vertex(3)
@@ -52,7 +54,7 @@ class Graph:
         """
         Returns true if the specified edge is in the graph.
 
-        >>> a = Graph({1,2}, [(1,2)])
+        >>> a = Graph([1,2], [(1,2)])
         >>> a.is_edge(1,2)
         True
         >>> a.is_edge(2,1)
@@ -71,7 +73,7 @@ class Graph:
         """
         Returns a copy of the set of vertices in the graph.
 
-        >>> a = Graph({1,2,3}, [(1,2), (2,3)])
+        >>> a = Graph([1,2,3], [(1,2), (2,3)])
         >>> a.vertices() == {1,2,3}
         True
         """
@@ -82,7 +84,7 @@ class Graph:
         """
         Returns a list of edges in the graph.
 
-        >>> a = Graph({1,2,3}, [(1,2), (2,3)])
+        >>> a = Graph([1,2,3], [(1,2), (2,3)])
         >>> a.edges()
         [(1, 2), (2, 3)]
 
@@ -124,14 +126,14 @@ class Graph:
         an edge from the first to the second is added. Two edges cannot exist
         between the same two nodes.
 
-        >>> a = Graph({1,2})
+        >>> a = Graph([1,2])
         >>> a.adjacency_dict
         {1: set(), 2: set()}
         >>> a.add_edge(1,2)
         >>> a.adjacency_dict
         {1: {2}, 2: set()}
 
-        >>> b = Graph({1,2}, is_directed = False)
+        >>> b = Graph([1,2], is_directed = False)
         >>> b.add_edge(1,2)
         >>> b.adjacency_dict
         {1: {2}, 2: {1}}
@@ -205,7 +207,7 @@ class Graph:
         """
         Given a vertex, returns a list of vertices reachable from that vertex.
 
-        >>> g = Graph({1,2,3}, [(1,2), (1,3)])
+        >>> g = Graph([1,2,3], [(1,2), (1,3)])
         >>> g.neighbours(1)
         [2, 3]
         """

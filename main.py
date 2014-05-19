@@ -3,6 +3,7 @@
 #      http://cs.brown.edu/~rt/gdhandbook/chapters/force-directed.pdf
 
 import pygame
+
 from random import randint
 from math import log, acos, sin, cos
 from sys import exit
@@ -11,23 +12,42 @@ from colorgraph import ColorGraph
 from vector import Vector
 from collections import defaultdict
 
+def in_range(vector_1, vector_1_radius, vector_2, vector_2_radius):
+    """
+    Given two vectors, which we can see as circles/spheres/hypermegaspheres
+    if given a radius, this function tests whether the two vectors with
+    these radii overlap given a position and size.
+
+    >>> a = Vector(0, 0)
+    >>> in_range(a, 0.1, a, 0.1)
+    True
+    >>> b = Vector(10,0)
+    >>> in_range(a, 10, b, 10)
+    True
+    >>> in_range(a, 4, b, 4)
+    False
+    """
+
+    space_between_vectors = (vector_1 - vector_2).norm()
+    combined_radii = vector_1_radius + vector_2_radius
+
+    return space_between_vectors < combined_radii
+
 def random_coord(vertex):
+    """
+    Returns a random coordinate within 10
+    screen lengths from the centre of the map.
+    """
+
     x_coordinate = randint(-10*screen_width, 10*screen_width)
     y_coordinate = randint(-10*screen_height, 10*screen_height)
 
     return Vector(x_coordinate, y_coordinate)
 
-def in_range(vertex_1, vertex_1_size, vertex_2, vertex_2_size):
-    """
-    Tests whether two vertices overlap, based on their position and size
-    """
-
-    return (vertex_1 - vertex_2).norm() < vertex_1_size + vertex_2_size
-
 def get_new_coordinate(vertex):
     """
-    Returns a new coordinate vector, randomly placed on the map and tested to ensure
-    it does not overlap with another vertex.
+    Returns a new coordinate vector, randomly placed on the map
+    and tested to ensure it does not overlap with another vertex.
     """
 
     new_coordinate = random_coord(vertex)
@@ -40,20 +60,32 @@ def get_new_coordinate(vertex):
     return new_coordinate
 
 def draw_graph(graph):
-    for vertex in graph.vertices():
-        if vertex not in vertex_coordinates:
-            vertex_coordinates[vertex] = get_new_coordinate(vertex)
+    """ Using pygame, draws the map on the screen """
 
-    for edge_1, edge_2 in graph.edges():
-        pygame.draw.line(screen, COLOURS["WHITE"],
-                tuple(int(x) for x in (vertex_coordinates[edge_1]*magnification + offset)),
-                tuple(int(x) for x in (vertex_coordinates[edge_2]*magnification + offset)), int(50*magnification))
+    not_in_coordinates = lambda x: x not in vertex_coordinates
+    not_coordinates = filter(not_in_coordinates, graph.graph.vertices())
+    for vertex in not_coordinates:
+        vertex_coordinates[vertex] = get_new_coordinate(vertex)
 
-    for vertex in graph.vertices():
+    for edge_1, edge_2 in graph.graph.edges():
+        vector_1  = vertex_coordinates[edge_1]*magnification + offset
+        coord_1 = tuple(int(x) for x in vector_1)
+
+        vector_2 = vertex_coordinates[edge_2]*magnification + offset
+        coord_2 = tuple(int(x) for x in vector_2)
+
+        thickness = int(50*magnification)
+
+        pygame.draw.line(screen, COLOURS["WHITE"], coord_1, coord_2, thickness)
+
+    for vertex in graph.graph.vertices():
         vertex_color = COLOURS[graph.get_color(vertex)]
 
-        pygame.draw.circle(screen, vertex_color,
-                Vector(*(int(x*magnification) for x in vertex_coordinates[vertex])) + offset, int(vertex_sizes[vertex]*magnification) if vertex not in to_highlight else 50)
+        magnified = [int(x*magnification) for x in vertex_coordinates[vertex]]
+        center = Vector(*magnified) + offset
+        radius = int(vertex_sizes[vertex]*magnification)
+
+        pygame.draw.circle(screen, vertex_color, center, radius)
 
 def update_screen_image(graph):
     screen.fill(COLOURS["BLACK"])
@@ -65,7 +97,7 @@ def gravitate_nodes(vertices, cycles):
             total_force = Vector(0, 0)
 
             # Edge Spring Force
-            for x,y in (x for x in graph.edges() if x[0] == vertex):
+            for x,y in (x for x in graph.graph.edges() if x[0] == vertex):
                 distance = vertex_coordinates[y] - vertex_coordinates[x]
 
                 x_negative = -1 if distance[0] < 0 else 1
@@ -156,17 +188,19 @@ edges = [(1,2),(2,1),(3,4),(4,3),(4,2),(2,4),(3,5),(5,3),(1,6),(6,1), (7,8), (8,
         (8,1),(8,2),(8,3),(8,4),(8,5),(8,6),(8,7),(8,9),
         (9,1),(9,2),(9,3),(9,4),(9,5),(9,6),(9,7),(9,8)]"""
 
-vertices = {1:"RED", 2:"BLUE", 3:"RED", 4:"BLUE", 5:"BLUE", 6:"RED"}
+vertices = [(1,"RED"), (2,"BLUE"), (3,"RED"), (4,"BLUE"), (5,"BLUE"), (6,"RED")]
 edges = [(1,2), (2,3), (3,4), (4,5), (5,6)]
 
-vertices = {1:"RED", 2:"RED", 3:"RED", 4:"RED", 5:"RED", 6:"RED",
-    7:"RED", 8:"BLUE", 9:"BLUE", 10:"BLUE", 11:"BLUE", 12:"BLUE",
-    13:"GREEN", 14:"GREEN", 15:"GREEN", 16:"GREEN", 17:"GREEN",
-    18:"GREEN", 19:"PURPLE", 20:"PURPLE", 21:"PURPLE", 22:"PURPLE"}
-edges = [(1,2), (1,8), (1,14), (1,19), (2,1), (3,8), (3,9), (3,14),
-    (4,19), (5,16), (6,12), (7,13), (7,18), (7,22), (10, 19), (10,16),
-    (11,16), (12, 17), (12, 18), (12, 21), (15, 19), (16, 20), (4,13),
-    (4,20), (5,21), (4,22), (6,22), (9,11)]
+vertices = [(1,"RED"),     (2,"RED"),    (3,"RED"),    (4,"RED"),
+            (5,"RED"),     (6,"RED"),    (7,"RED"),    (8,"BLUE"),
+            (9,"BLUE"),    (10,"BLUE"),  (11,"BLUE"),  (12,"BLUE"),
+            (13,"GREEN"),  (14,"GREEN"), (15,"GREEN"), (16,"GREEN"),
+            (17,"GREEN"),  (18,"GREEN"), (19,"PURPLE"), (20,"PURPLE"), 
+            (21,"PURPLE"), (22,"PURPLE")]
+edges = [( 1,  2), ( 1,  8), ( 1, 14), ( 1, 19), ( 2,  1), ( 3,  8), ( 3,  9),
+         ( 3, 14), ( 4, 19), ( 5, 16), ( 6, 12), ( 7, 13), ( 7, 18), ( 7, 22),
+         (10, 19), (10, 16), (11, 16), (12, 17), (12, 18), (12, 21), (15, 19),
+         (16, 20), ( 4, 13), ( 4, 20), ( 5, 21), ( 4, 22), ( 6, 22), ( 9, 11)]
 
 graph = ColorGraph(vertices, edges)
 
